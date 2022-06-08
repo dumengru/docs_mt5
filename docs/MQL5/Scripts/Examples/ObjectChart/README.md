@@ -1,0 +1,3 @@
+# ObjectChart
+
+source: `{{ page.path }}`

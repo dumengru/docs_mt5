@@ -1,0 +1,10 @@
+zmq问题
+1. 通过指针方式调用zmq.hpp, 一直有问题
+2. 通过函数凡是调用zmq.cpp, 一直有问题
+3. 经过测试, zmq.cpp又能正常运行
+4. 发现vs中必须使用*, mt5中必须使用localhost
+
+json问题
+1. 使用zmq.cpp之后, 需要直接传送char *数据, mt5接收中文乱码
+2. mt5中的zmq可以直接接收char []数据然后转码
+3. mt5中的JAson可以直接反序列化char[]

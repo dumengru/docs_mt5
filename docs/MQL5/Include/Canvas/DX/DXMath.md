@@ -1,0 +1,3 @@
+# DXMath
+
+source: `{{ page.path }}`

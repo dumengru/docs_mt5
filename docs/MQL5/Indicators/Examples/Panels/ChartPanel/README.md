@@ -1,0 +1,3 @@
+# ChartPanel
+
+source: `{{ page.path }}`

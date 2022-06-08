@@ -1,0 +1,3 @@
+# Trailing
+
+source: `{{ page.path }}`

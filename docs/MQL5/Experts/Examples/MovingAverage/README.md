@@ -1,0 +1,3 @@
+# MovingAverage
+
+source: `{{ page.path }}`

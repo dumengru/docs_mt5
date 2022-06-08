@@ -1,0 +1,3 @@
+# Scripts
+
+source: `{{ page.path }}`

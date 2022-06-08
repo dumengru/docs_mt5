@@ -1,0 +1,15 @@
+1. 接收交易所数据(仿照ctpprint)
+2. 利用rapidjson将数据转为json
+3. 首先用了函数方式转json, 然后写了转json的类RdJson
+4. RdJson中首先尝试了Document方式, 然后尝试了Writer方式(失败), 最后确定了Document方式
+5. 和mt5交互正常发送数据, 然后发现中文乱码
+
+如何解决中文乱码？
+1. 修改项目属性"字符集", 无用
+2. 百度搜索字符转换函数, 千辛万苦找到"UTF8ToString/StringToUTF8"
+3. vs到mt5中文显示正常, mt5到vs只显示一个中文字符
+4. 感觉转换函数有问题, 不断尝试, 确定转换函数无误
+5. 感觉mt5发送有问题, 将字符串转为json, 仍只能看到2个中文
+6. 查看ZmqMsg源码, 发现有一个StringToUtf8函数
+7. 最后在构造ZmqMsg时, 添加一个参数false.
+8. vs成功接收到完整中文数据

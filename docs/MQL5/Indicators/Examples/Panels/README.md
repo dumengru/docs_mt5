@@ -1,0 +1,3 @@
+# Panels
+
+source: `{{ page.path }}`

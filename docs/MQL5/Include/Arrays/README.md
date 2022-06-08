@@ -1,0 +1,3 @@
+# Arrays
+
+source: `{{ page.path }}`

@@ -1,0 +1,3 @@
+# MACD
+
+source: `{{ page.path }}`

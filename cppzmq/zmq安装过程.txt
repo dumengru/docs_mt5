@@ -1,0 +1,17 @@
+1. zmq主版本为libzmq，cpp常用版本为cppzmq
+2. zmq没有现成的dll文件，需要自己编译
+
+编译过程
+1. 安装cmake, 安装VisualStudio（VS要安装cmake工具）
+2. cmake直接编译cppzmq报错
+3. cmake直接编译libzmq成功，获取对应的lib和dll
+4. 将libzmq的include文件夹文件和cppzmq的两个.hpp头文件保存到一起
+
+测试成功
+1. 新建项目
+2. 添加.hpp头文件
+3. VC++目录/包含目录，添加头文件目录
+4. 链接器/常规/附加库目录，添加lib文件目录
+5. 链接器/输入/附加依赖项/，添加lib文件名
+6. dll文件和项目文件放一起
+7. 运行成功

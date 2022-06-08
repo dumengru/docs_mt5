@@ -1,0 +1,3 @@
+# SymbolInfo
+
+source: `{{ page.path }}`
