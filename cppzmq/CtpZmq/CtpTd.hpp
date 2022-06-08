@@ -276,24 +276,159 @@ public:
 	{
 		if (pRspInfo && pRspInfo->ErrorID != 0) {
 			printf("OnRspOrderInsert. %d - %s\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
-			return;
+
+			td_json_pub->add_member("报单响应", "OnRspOrderInsert");
+			td_json_pub->add_member("错误代码", pRspInfo->ErrorID);
+			td_json_pub->add_member("错误信息", pRspInfo->ErrorMsg);
 		}
-		printf("OnRspOrderInsert:InstrumentID:%s,ExchangeID:%s,VolumeTotalOriginal:%d,LimitPrice:%lf,RequestID:%d,InvestUnitID:%s\n", pInputOrder->InstrumentID, pInputOrder->ExchangeID, pInputOrder->VolumeTotalOriginal, pInputOrder->LimitPrice, pInputOrder->RequestID, pInputOrder->InvestUnitID);
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
+		if (bIsLast) {
+			//--- 响应结束
+			_semaphore.signal();
+		}
+	}
+
+	void OnErrRtnOrderInsert(CThostFtdcInputOrderField* pInputOrder, CThostFtdcRspInfoField* pRspInfo)
+	{
+		printf("回调: OnErrRtnOrderInsert");
+	}
+
+	void OnRtnOrder(CThostFtdcOrderField* pOrder)
+	{
+		td_json_pub->add_member("经纪公司代码", pOrder->BrokerID);
+		td_json_pub->add_member("投资者代码", pOrder->InvestorID);
+		td_json_pub->add_member("合约代码", pOrder->InstrumentID);
+		td_json_pub->add_member("报单引用", pOrder->OrderRef);
+		td_json_pub->add_member("用户代码", pOrder->UserID);
+		td_json_pub->add_member("报单价格条件", pOrder->OrderPriceType);
+		td_json_pub->add_member("买卖方向", pOrder->Direction);
+		td_json_pub->add_member("组合开平标志", pOrder->CombOffsetFlag);
+		td_json_pub->add_member("组合投机套保标志", pOrder->CombHedgeFlag);
+		td_json_pub->add_member("价格", pOrder->LimitPrice);
+		td_json_pub->add_member("数量", pOrder->VolumeTotalOriginal);
+		td_json_pub->add_member("有效期类型", pOrder->TimeCondition);
+		td_json_pub->add_member("GTD日期", pOrder->GTDDate);
+		td_json_pub->add_member("成交量类型", pOrder->VolumeCondition);
+		td_json_pub->add_member("最小成交量", pOrder->MinVolume);
+		td_json_pub->add_member("触发条件", pOrder->ContingentCondition);
+		td_json_pub->add_member("止损价", pOrder->StopPrice);
+		td_json_pub->add_member("强平原因", pOrder->ForceCloseReason);
+		td_json_pub->add_member("自动挂起标志", pOrder->IsAutoSuspend);
+		td_json_pub->add_member("业务单元", pOrder->BusinessUnit);
+		td_json_pub->add_member("请求编号", pOrder->RequestID);
+		td_json_pub->add_member("本地报单编号", pOrder->OrderLocalID);
+		td_json_pub->add_member("交易所代码", pOrder->ExchangeID);
+		td_json_pub->add_member("会员代码", pOrder->ParticipantID);
+		td_json_pub->add_member("客户代码", pOrder->ClientID);
+		td_json_pub->add_member("合约在交易所的代码", pOrder->ExchangeInstID);
+		td_json_pub->add_member("交易所交易员代码", pOrder->TraderID);
+		td_json_pub->add_member("安装编号", pOrder->InstallID);
+		td_json_pub->add_member("报单提交状态", pOrder->OrderSubmitStatus);
+		td_json_pub->add_member("报单提示序号", pOrder->NotifySequence);
+		td_json_pub->add_member("交易日", pOrder->TradingDay);
+		td_json_pub->add_member("结算编号", pOrder->SettlementID);
+		td_json_pub->add_member("报单编号", pOrder->OrderSysID);
+		td_json_pub->add_member("报单来源", pOrder->OrderSource);
+		td_json_pub->add_member("报单状态", pOrder->OrderStatus);
+		td_json_pub->add_member("报单类型", pOrder->OrderType);
+		td_json_pub->add_member("今成交数量", pOrder->VolumeTraded);
+		td_json_pub->add_member("剩余数量", pOrder->VolumeTotal);
+		td_json_pub->add_member("报单日期", pOrder->InsertDate);
+		td_json_pub->add_member("委托时间", pOrder->InsertTime);
+		td_json_pub->add_member("激活时间", pOrder->ActiveTime);
+		td_json_pub->add_member("挂起时间", pOrder->SuspendTime);
+		td_json_pub->add_member("最后修改时间", pOrder->UpdateTime);
+		td_json_pub->add_member("撤销时间", pOrder->CancelTime);
+		td_json_pub->add_member("最后修改交易所交易员代码", pOrder->ActiveTraderID);
+		td_json_pub->add_member("结算会员编号", pOrder->ClearingPartID);
+		td_json_pub->add_member("序号", pOrder->SequenceNo);
+		td_json_pub->add_member("前置编号", pOrder->FrontID);
+		td_json_pub->add_member("会话编号", pOrder->SessionID);
+		td_json_pub->add_member("用户端产品信息", pOrder->UserProductInfo);
+		td_json_pub->add_member("状态信息", pOrder->StatusMsg);
+		td_json_pub->add_member("用户强评标志", pOrder->UserForceClose);
+		td_json_pub->add_member("操作用户代码", pOrder->ActiveUserID);
+		td_json_pub->add_member("经纪公司报单编号", pOrder->BrokerOrderSeq);
+		td_json_pub->add_member("相关报单", pOrder->RelativeOrderSysID);
+		td_json_pub->add_member("郑商所成交数量", pOrder->ZCETotalTradedVolume);
+		td_json_pub->add_member("互换单标志", pOrder->IsSwapOrder);
+		td_json_pub->add_member("营业部编号", pOrder->BranchID);
+		td_json_pub->add_member("投资单元代码", pOrder->InvestUnitID);
+		td_json_pub->add_member("资金账号", pOrder->AccountID);
+		td_json_pub->add_member("币种代码", pOrder->CurrencyID);
+		td_json_pub->add_member("IP地址", pOrder->IPAddress);
+		td_json_pub->add_member("Mac地址", pOrder->MacAddress);
+
+		bool bIsLast = pOrder->OrderStatus != 'a';
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+		if (bIsLast) {
+			//--- 响应结束
+			_semaphore.signal();
+		}
+	}
+
+	void OnRtnTrade(CThostFtdcTradeField* pTrade)
+	{
+		printf("回调:OnRtnTrade\n");
+		if (pTrade)
+		{
+			td_json_pub->add_member("经纪公司代码", pTrade->BrokerID);
+			td_json_pub->add_member("投资者代码", pTrade->InvestorID);
+			td_json_pub->add_member("合约代码", pTrade->InstrumentID);
+			td_json_pub->add_member("报单引用", pTrade->OrderRef);
+			td_json_pub->add_member("用户代码", pTrade->UserID);
+			td_json_pub->add_member("交易所代码", pTrade->ExchangeID);
+			td_json_pub->add_member("成交编号", pTrade->TradeID);
+			td_json_pub->add_member("买卖方向", pTrade->Direction);
+			td_json_pub->add_member("报单编号", pTrade->OrderSysID);
+			td_json_pub->add_member("会员代码", pTrade->ParticipantID);
+			td_json_pub->add_member("客户代码", pTrade->ClientID);
+			td_json_pub->add_member("交易角色", pTrade->TradingRole);
+			td_json_pub->add_member("合约在交易所的代码", pTrade->ExchangeInstID);
+			td_json_pub->add_member("开平标志", pTrade->OffsetFlag);
+			td_json_pub->add_member("投机套保标志", pTrade->HedgeFlag);
+			td_json_pub->add_member("价格", pTrade->Price);
+			td_json_pub->add_member("数量", pTrade->Volume);
+			td_json_pub->add_member("成交时期", pTrade->TradeDate);
+			td_json_pub->add_member("成交时间", pTrade->TradeTime);
+			td_json_pub->add_member("成交类型", pTrade->TradeType);
+			td_json_pub->add_member("成交价来源", pTrade->PriceSource);
+			td_json_pub->add_member("交易所交易员代码", pTrade->TraderID);
+			td_json_pub->add_member("本地报单编号", pTrade->OrderLocalID);
+			td_json_pub->add_member("结算会员编号", pTrade->ClearingPartID);
+			td_json_pub->add_member("业务单元", pTrade->BusinessUnit);
+			td_json_pub->add_member("序号", pTrade->SequenceNo);
+			td_json_pub->add_member("交易日", pTrade->TradingDay);
+			td_json_pub->add_member("结算编号", pTrade->SettlementID);
+			td_json_pub->add_member("经纪公司报单编号", pTrade->BrokerOrderSeq);
+			td_json_pub->add_member("成交来源", pTrade->TradeSource);
+			td_json_pub->add_member("投资单元代码", pTrade->InvestUnitID);
+		}
 	}
 
 	int ReqOrderAction(rj::Value& params)
 	{
 		const char* InstrumentID = params["InstrumentID"].GetString();
+		const char* ExchangeID = params["ExchangeID"].GetString();
+		const char* OrderSysID = params["OrderSysID"].GetString();
 
 		CThostFtdcInputOrderActionField Req;
 		memset(&Req, 0x00, sizeof(Req));
 		strncpy_s(Req.BrokerID, td_broker, sizeof(Req.BrokerID) - 1);
 		strncpy_s(Req.InvestorID, td_user, sizeof(Req.InvestorID) - 1);
 		strncpy_s(Req.InstrumentID, InstrumentID, sizeof(Req.InstrumentID) - 1);
-		Req.FrontID = td_front_id;
-		Req.SessionID = td_session_id;
-		sprintf_s(Req.OrderRef, "%d", td_order_ref);
+		strncpy_s(Req.ExchangeID, ExchangeID, sizeof(Req.ExchangeID) - 1);
+		strncpy_s(Req.OrderSysID, OrderSysID, sizeof(Req.OrderSysID) - 1);
 		Req.ActionFlag = THOST_FTDC_AF_Delete;
+
 		return td_api->ReqOrderAction(&Req, td_request_id++);
 	}
 
@@ -302,9 +437,22 @@ public:
 	{
 		if (pRspInfo && pRspInfo->ErrorID != 0) {
 			printf("OnRspOrderAction. %d - %s\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
-			return;
+
+			td_json_pub->add_member("撤单响应", "OnRspOrderAction");
+			td_json_pub->add_member("错误代码", pRspInfo->ErrorID);
+			td_json_pub->add_member("错误信息", pRspInfo->ErrorMsg);
+
 		}
-		printf("OnRspOrderAction:InstrumentID:%s,ExchangeID:%s,OrderSysID:%s,FrontID:%d,SessionID:%d,OrderRef:%s,RequestID:%d,InvestUnitID:%s\n", pInputOrderAction->InstrumentID, pInputOrderAction->ExchangeID, pInputOrderAction->OrderSysID, pInputOrderAction->FrontID, pInputOrderAction->SessionID, pInputOrderAction->OrderRef, pInputOrderAction->RequestID, pInputOrderAction->InvestUnitID);
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
+		if (bIsLast) {
+			//--- 响应结束
+			_semaphore.signal();
+		}
 	}
 	
 	int ReqQryDepthMarketData(rj::Value& params)
@@ -320,9 +468,16 @@ public:
 	{
 		if (pRspInfo && pRspInfo->ErrorID != 0) {
 			printf("OnRspQryDepthMarketData. %d - %s\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+
+			td_json_pub->add_member("查询失败", "OnRspQryDepthMarketData");
+			td_json_pub->add_member("错误代码", pRspInfo->ErrorID);
+			td_json_pub->add_member("错误信息", pRspInfo->ErrorMsg);
+			strcpy_s(td_send_pub, td_json_pub->get_string());
+			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+			td_json_pub->remove_members();
+			_semaphore.signal();
 			return;
 		}
-
 		td_json_pub->add_member("交易日", pDepthMarketData->TradingDay);
 		td_json_pub->add_member("合约代码", pDepthMarketData->InstrumentID);
 		td_json_pub->add_member("交易所代码", pDepthMarketData->ExchangeID);
@@ -343,7 +498,6 @@ public:
 		td_json_pub->add_member("跌停板价", double_format(pDepthMarketData->LowerLimitPrice));
 		td_json_pub->add_member("最后修改时间", pDepthMarketData->UpdateTime);
 		td_json_pub->add_member("最后修改毫秒", pDepthMarketData->UpdateMillisec);
-
 		td_json_pub->add_member("申买价一", pDepthMarketData->BidPrice1);
 		td_json_pub->add_member("申买量一", pDepthMarketData->BidVolume1);
 		td_json_pub->add_member("申卖价一", pDepthMarketData->AskPrice1);
@@ -364,15 +518,16 @@ public:
 		td_json_pub->add_member("申买量五", pDepthMarketData->BidVolume5);
 		td_json_pub->add_member("申卖价五", pDepthMarketData->AskPrice5);
 		td_json_pub->add_member("申卖量五", pDepthMarketData->AskVolume5);
-
 		td_json_pub->add_member("当日均价", pDepthMarketData->AveragePrice);
 		td_json_pub->add_member("业务日期", pDepthMarketData->ActionDay);
 
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -395,11 +550,14 @@ public:
 			td_json_pub->add_member("交易所名称", pExchange->ExchangeName);
 			td_json_pub->add_member("交易所属性", pExchange->ExchangeProperty);
 		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -430,11 +588,13 @@ public:
 			td_json_pub->add_member("交易所代码", pExchangeMarginRate->ExchangeID);
 		}
 
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -483,11 +643,13 @@ public:
 			td_json_pub->add_member("组合类型", pInstrument->CombinationType);
 		}
 
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -521,11 +683,14 @@ public:
 			td_json_pub->add_member("业务类型", pInstrumentCommissionRate->BizType);
 			td_json_pub->add_member("投资单元代码", pInstrumentCommissionRate->InvestUnitID);
 		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -559,11 +724,14 @@ public:
 			td_json_pub->add_member("交易所代码", pInstrumentMarginRate->ExchangeID);
 			td_json_pub->add_member("投资单元代码", pInstrumentMarginRate->InvestUnitID);
 		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -593,11 +761,14 @@ public:
 			td_json_pub->add_member("交易所代码", pInstrumentOrderCommRate->ExchangeID);
 			td_json_pub->add_member("投资单元代码", pInstrumentOrderCommRate->InvestUnitID);
 		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -628,11 +799,14 @@ public:
 			td_json_pub->add_member("手续费率模板代码", pInvestor->CommModelID);
 			td_json_pub->add_member("保证金率模板代码", pInvestor->MarginModelID);
 		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -702,11 +876,14 @@ public:
 			td_json_pub->add_member("tas持仓手数", pInvestorPosition->TasPosition);
 			td_json_pub->add_member("tas持仓成本", pInvestorPosition->TasPositionCost);
 		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -749,11 +926,13 @@ public:
 			td_json_pub->add_member("投资单元代码", pInvestorPositionCombineDetail->InvestUnitID);
 		}
 
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -803,11 +982,14 @@ public:
 			td_json_pub->add_member("投资单元代码", pInvestorPositionDetail->InvestUnitID);
 			td_json_pub->add_member("特殊持仓标志", pInvestorPositionDetail->SpecPosiType);
 		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -834,11 +1016,14 @@ public:
 			td_json_pub->add_member("资金账号", pInvestUnit->AccountID);
 			td_json_pub->add_member("币种代码", pInvestUnit->CurrencyID);
 		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -856,8 +1041,7 @@ public:
 
 	void OnRspQryOrder(CThostFtdcOrderField* pOrder, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 	{
-		if (pOrder)
-		{
+		if (pOrder) {
 			td_json_pub->add_member("经纪公司代码", pOrder->BrokerID);
 			td_json_pub->add_member("投资者代码", pOrder->InvestorID);
 			td_json_pub->add_member("合约代码", pOrder->InstrumentID);
@@ -921,12 +1105,20 @@ public:
 			td_json_pub->add_member("币种代码", pOrder->CurrencyID);
 			td_json_pub->add_member("IP地址", pOrder->IPAddress);
 			td_json_pub->add_member("Mac地址", pOrder->MacAddress);
-		}
-		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
+
+			td_json_pub->add_member("bIsLast", bIsLast);
 			strcpy_s(td_send_pub, td_json_pub->get_string());
 			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
 			td_json_pub->remove_members();
+		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
+		if (bIsLast) {
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -963,11 +1155,14 @@ public:
 			td_json_pub->add_member("交易所产品代码", pProduct->ExchangeProductID);
 			td_json_pub->add_member("合约基础商品乘数", pProduct->UnderlyingMultiple);
 		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -1019,11 +1214,14 @@ public:
 			td_json_pub->add_member("成交来源", pTrade->TradeSource);
 			td_json_pub->add_member("投资单元代码", pTrade->InvestUnitID);
 		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -1067,11 +1265,14 @@ public:
 			td_json_pub->add_member("保底期货结算准备金", pTradingAccount->ReserveBalance);
 			td_json_pub->add_member("业务类型", pTradingAccount->BizType);
 		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -1101,11 +1302,14 @@ public:
 			td_json_pub->add_member("业务类型", pTradingCode->BizType);
 			td_json_pub->add_member("投资单元代码", pTradingCode->InvestUnitID);
 		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}
@@ -1132,11 +1336,14 @@ public:
 			td_json_pub->add_member("消息正文", pTradingNotice->FieldContent);
 			td_json_pub->add_member("投资单元代码", pTradingNotice->InvestUnitID);
 		}
+
+		td_json_pub->add_member("bIsLast", bIsLast);	// 判断响应是否结束
+		strcpy_s(td_send_pub, td_json_pub->get_string());
+		zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
+		td_json_pub->remove_members();
+
 		if (bIsLast) {
-			//--- 查询完毕, 返回数据, 清空json, 发送信号
-			strcpy_s(td_send_pub, td_json_pub->get_string());
-			zmq_send(td_socket_pub, td_send_pub, sizeof(td_send_pub), 0);
-			td_json_pub->remove_members();
+			//--- 响应结束
 			_semaphore.signal();
 		}
 	}

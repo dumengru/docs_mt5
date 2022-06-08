@@ -35,7 +35,7 @@ public:
 			cv.notify_one();
 	}
 
-private:
+public:
 	int count;
 	std::mutex mt;
 	std::condition_variable cv;
